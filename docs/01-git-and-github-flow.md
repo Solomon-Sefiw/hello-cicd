@@ -71,6 +71,6 @@ The rule: finish the sentence **"This commit will…"**
 ## Exercise
 
 1. Create a branch `feature/change-title`.
-2. Change the `<h1>` in `web/src/App.jsx`.
+2. Change the `<h1>` in `web/src/pages/TodosPage.jsx`.
 3. Commit, push, and open a PR.
 4. Watch the **Checks** section at the bottom of the PR. → continue with [Lesson 2](02-github-actions-basics.md).
