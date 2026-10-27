@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4          # download the repo onto the VM
-      - uses: actions/setup-dotnet@v4      # install .NET
+      - uses: actions/setup-dotnet@v6      # install .NET
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       - run: dotnet test HelloCicd.sln --configuration Release

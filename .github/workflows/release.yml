@@ -75,7 +75,7 @@ jobs:
     environment: production        # shows under "Environments"; you can add a manual approval here later
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       - uses: actions/setup-node@v4
