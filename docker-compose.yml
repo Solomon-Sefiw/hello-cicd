@@ -1,0 +1,18 @@
+# Run the whole app in containers with one command:
+#   docker compose up --build
+# Web: http://localhost:3000   API: http://localhost:8080/api/health
+services:
+  api:
+    build: ./api
+    ports:
+      - "8080:8080"
+
+  web:
+    build:
+      context: ./web
+      args:
+        VITE_API_URL: http://localhost:8080   # the browser calls this, so it's a localhost address
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
