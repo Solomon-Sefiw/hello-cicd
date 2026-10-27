@@ -32,7 +32,7 @@ jobs:
     name: Test .NET API
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4          # download the repo onto the VM
+      - uses: actions/checkout@v7          # download the repo onto the VM
       - uses: actions/setup-dotnet@v6      # install .NET
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
@@ -45,7 +45,7 @@ jobs:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -63,7 +63,7 @@ jobs:
       matrix:
         app: [api, web]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: docker/setup-buildx-action@v3
       # Build the image but DON'T push it. This proves the Dockerfile still works,
       # so a broken Dockerfile is caught in the PR, not after merge.
