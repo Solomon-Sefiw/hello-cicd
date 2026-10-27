@@ -25,7 +25,7 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
-      - run: dotnet test api.Tests --configuration Release
+      - run: dotnet test HelloCicd.sln --configuration Release
 
   build-web:
     name: Lint + build React app

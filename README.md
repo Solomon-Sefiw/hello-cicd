@@ -22,6 +22,7 @@ and see it deploy itself to AWS.
 
 | Folder | What it is |
 |---|---|
+| `HelloCicd.sln` | Solution file. Open it in Visual Studio / Rider. |
 | `api/` | .NET 8 minimal API. Runs normally on your PC, and inside Lambda on AWS. |
 | `api.Tests/` | xUnit tests. If any fail, nothing gets deployed. |
 | `web/` | React app (Vite). |
@@ -46,19 +47,21 @@ and see it deploy itself to AWS.
 
 ## Step 0 — Run it on your PC
 
-Open two terminals:
+**Backend (pick one):**
+
+- **Visual Studio**: open `HelloCicd.sln`, set `Api` as the startup project, and press **F5**.
+  The browser opens `http://localhost:5080/api/health`.
+- **VS Code / terminal**: `dotnet run --project api`
+
+**Frontend** (in a second terminal), on http://localhost:5173:
 
 ```bash
-# terminal 1: API on http://localhost:5080
-dotnet run --project api
-
-# terminal 2: React on http://localhost:5173
 cd web
 npm install
 npm run dev
 ```
 
-Run the tests: `dotnet test api.Tests`
+Run the tests: `dotnet test HelloCicd.sln` (or **Test → Run All Tests** in Visual Studio).
 
 ## Step 1 — Put it on GitHub
 
