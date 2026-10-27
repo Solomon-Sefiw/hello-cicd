@@ -67,7 +67,7 @@ jobs:
       - uses: docker/setup-buildx-action@v3
       # Build the image but DON'T push it. This proves the Dockerfile still works,
       # so a broken Dockerfile is caught in the PR, not after merge.
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         with:
           context: ./${{ matrix.app }}
           push: false
