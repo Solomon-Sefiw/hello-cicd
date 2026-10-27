@@ -1,0 +1,110 @@
+name: CI/CD
+
+# WHEN does this run?
+#  - every push to main      -> test, then deploy to AWS
+#  - every pull request      -> test only (never deploys)
+#  - "Run workflow" button   -> manual run from the Actions tab
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  NODE_VERSION: '22'
+
+jobs:
+  # ---------------- CI: Continuous Integration ----------------
+  # Proves the code builds and the tests pass. Runs on a fresh Ubuntu VM GitHub gives us for free.
+  test-api:
+    name: Test .NET API
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - run: dotnet test api.Tests --configuration Release
+
+  build-web:
+    name: Lint + build React app
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
+  # ---------------- CD: Continuous Deployment ----------------
+  # Only runs if BOTH CI jobs passed, and only for pushes to main (not pull requests).
+  deploy:
+    name: Deploy to AWS
+    needs: [test-api, build-web]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production   # shows up under "Environments" in GitHub; you can add approval rules later
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      # Logs the runner into your AWS account using the secrets you saved in GitHub.
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      # --- Backend: .NET -> AWS Lambda ---
+      - name: Publish API
+        run: |
+          dotnet publish api/Api.csproj -c Release -r linux-x64 --self-contained false -o publish
+          cd publish && zip -qr ../api.zip .
+
+      - name: Upload API to Lambda
+        run: |
+          aws lambda update-function-code --function-name "${{ vars.LAMBDA_FUNCTION_NAME }}" --zip-file fileb://api.zip > /dev/null
+          aws lambda wait function-updated --function-name "${{ vars.LAMBDA_FUNCTION_NAME }}"
+          aws lambda update-function-configuration --function-name "${{ vars.LAMBDA_FUNCTION_NAME }}" \
+            --environment "Variables={APP_VERSION=${GITHUB_SHA::7},AllowedOrigin=${{ vars.WEB_URL || '*' }}}" > /dev/null
+          aws lambda wait function-updated --function-name "${{ vars.LAMBDA_FUNCTION_NAME }}"
+
+      - name: Find the API's public URL
+        id: api
+        run: echo "url=$(aws lambda get-function-url-config --function-name "${{ vars.LAMBDA_FUNCTION_NAME }}" --query FunctionUrl --output text)" >> "$GITHUB_OUTPUT"
+
+      # --- Frontend: React -> S3 static website ---
+      - name: Build React app pointing at the live API
+        working-directory: web
+        env:
+          VITE_API_URL: ${{ steps.api.outputs.url }}
+        run: |
+          npm ci
+          npm run build
+
+      - name: Upload React app to S3
+        run: aws s3 sync web/dist "s3://${{ vars.S3_BUCKET }}" --delete
+
+      - name: Smoke test
+        run: curl --fail --silent "${{ steps.api.outputs.url }}api/health"
+
+      - name: Summary
+        run: |
+          echo "### Deployed :rocket:" >> "$GITHUB_STEP_SUMMARY"
+          echo "- API: ${{ steps.api.outputs.url }}api/health" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Web: ${{ vars.WEB_URL }}" >> "$GITHUB_STEP_SUMMARY"
