@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <!-- Lets the same ASP.NET Core app run locally (Kestrel) AND inside AWS Lambda -->
-    <PackageReference Include="Amazon.Lambda.AspNetCoreServer.Hosting" Version="1.7.1" />
+    <PackageReference Include="Amazon.Lambda.AspNetCoreServer.Hosting" Version="2.2.1" />
   </ItemGroup>
 
 </Project>
