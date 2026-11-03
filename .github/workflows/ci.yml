@@ -64,7 +64,7 @@ jobs:
         app: [api, web]
     steps:
       - uses: actions/checkout@v7
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
       # Build the image but DON'T push it. This proves the Dockerfile still works,
       # so a broken Dockerfile is caught in the PR, not after merge.
       - uses: docker/build-push-action@v7
