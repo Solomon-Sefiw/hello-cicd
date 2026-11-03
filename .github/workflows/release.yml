@@ -49,7 +49,7 @@ jobs:
       #   sha-1a2b3c4 : exactly this commit (never changes - use this to deploy or roll back)
       #   latest      : whatever main is right now
       - id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}-${{ matrix.app }}
           tags: |
